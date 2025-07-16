@@ -33,16 +33,20 @@ def main():
         for scraper in SCRAPERS:
             adverts = scraper.fetch_new_adverts()
             for advert in adverts:
-                all_adverts.append(advert)
                 if storage.is_new_advert(advert):
                     print('New advert found:', advert)
                     storage.save_advert(advert)
+                    all_adverts.append(advert)
+                    
+        storage.close()
                     
         config = get_config()
-        notify(all_adverts, config["recipient_emails"], config["email_credentials"])
+        if len(all_adverts) > 0:
+            notify(all_adverts, config["recipient_emails"], config["email_credentials"])
+        else:
+            print("No ads detected.")
         
-        storage.close()
-        time.sleep(minutes * 60)
+        time.sleep(minutes * 10)
 
 if __name__ == '__main__':
     main() 
