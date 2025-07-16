@@ -1,15 +1,19 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from .Advert import Advert
+from Advert import Advert
 
-def send_email(subject, body, to_email, credentials):
+def send_email(subject, body, recipients, credentials):
 
     # Create the email message
     msg = MIMEMultipart()
     msg['From'] = credentials["email"]
-    msg['To'] = to_email
+    msg['To'] = recipients[0]
     msg['Subject'] = subject
+    
+    if len(recipients) > 1:
+        msg['Cc'] = ", ".join(recipients[1:]) # Join multiple CC emails with a comma and space
+
 
     # Attach the email body
     msg.attach(MIMEText(body, 'html'))
@@ -21,7 +25,7 @@ def send_email(subject, body, to_email, credentials):
         server.login(credentials["email"], credentials["password"])
 
         # Send the email
-        server.sendmail(credentials["email"], to_email, msg.as_string())
+        server.sendmail(credentials["email"], recipients[0], msg.as_string())
         print("Email sent successfully!")
     except Exception as e:
         print(f"Failed to send email: {e}")
@@ -46,6 +50,5 @@ def notify(new_adverts, recipients, credentials):
         </body>
         </html>
         """
-    send_to = ", ".join(recipients)
-    send_email("New Housing Adverts!", html, send_to, credentials)
+    send_email("New Housing Adverts!", html, recipients, credentials)
     

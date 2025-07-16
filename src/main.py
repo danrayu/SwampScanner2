@@ -5,7 +5,8 @@ from scrapers.Funda import Funda
 from storage import AdvertStorage
 import time
 from datetime import datetime
-
+import json
+from notifier import notify
 minutes = 1
 
 SCRAPERS = [
@@ -15,6 +16,11 @@ SCRAPERS = [
     # Funda()
 ]
 
+def get_config():
+    with open("config.json", 'r') as file:
+        return json.load(file)
+    
+
 def main():
     while True:
         now = datetime.now()
@@ -22,12 +28,19 @@ def main():
         print(f"\nTime: {current_time} | Running scan...")
         
         storage = AdvertStorage()
+        
+        all_adverts = []
         for scraper in SCRAPERS:
             adverts = scraper.fetch_new_adverts()
             for advert in adverts:
+                all_adverts.append(advert)
                 if storage.is_new_advert(advert):
                     print('New advert found:', advert)
                     storage.save_advert(advert)
+                    
+        config = get_config()
+        notify(all_adverts, config["recipient_emails"], config["email_credentials"])
+        
         storage.close()
         time.sleep(minutes * 60)
 
